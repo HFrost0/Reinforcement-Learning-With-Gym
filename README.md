@@ -12,4 +12,4 @@ pip install 'gym[box2d]'
 ![Alt Text](https://github.com/HFrost0/Reinforcement-Learning-With-Gym/blob/master/saved_models/lunar.gif)
 ## Step 3 : Explore the detail of the algorithm and do your own job👏
 This implementation is well arranged and easy to understand. Enjoy your learning of Deep Reinforcement Algorithm.
-From more implementations you can see [spinning up](https://spinningup.openai.com/) which I followed.
+For more implementations you can see [spinning up](https://spinningup.openai.com/) which I followed.
