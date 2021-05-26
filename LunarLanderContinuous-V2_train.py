@@ -19,7 +19,6 @@ for ep in range(episodes):
     while not done:
         i_step += 1
         action = agent.get_action(state, deter=False)
-        action = action.clip(-1., 1.)
         next_state, reward, done, _ = env.step(action)
         agent.memory.push((state, action, reward, next_state, done))
         state = next_state
