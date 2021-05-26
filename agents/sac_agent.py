@@ -13,11 +13,10 @@ class SACAgent:
             device='cpu',
             memory_size=100000,
             batch_size=128,
-            alpha=0.2,
-            gamma=0.99,
-            soft_tau=1e-2,
             hidden_size=200,
             lr=5e-4,
+            gamma=0.99,
+            alpha=0.2,
             polyak=0.995,
     ):
         self.device = device
@@ -25,7 +24,6 @@ class SACAgent:
         self.batch_size = batch_size
         self.alpha = alpha
         self.gamma = gamma
-        self.soft_tau = soft_tau
         self.hidden_size = hidden_size
         self.lr = lr
         self.polyak = polyak
@@ -45,10 +43,11 @@ class SACAgent:
 
         self.memory = Memory(self.memory_size)
 
+    @torch.no_grad()
     def get_action(self, state, deter):
         state = torch.from_numpy(state).to(torch.float32).unsqueeze(dim=0).to(self.device)
         action = self.actor(state, deter, with_log_prob=False)
-        return action.squeeze(dim=0).cpu().detach().numpy()
+        return action.squeeze(dim=0).cpu().numpy()
 
     def update(self, n_updates):
         if len(self.memory) < self.batch_size:
@@ -86,8 +85,6 @@ class SACAgent:
             with torch.no_grad():
                 for q, target_q in zip([self.q1, self.q2], [self.target_q1, self.target_q2]):
                     for param, target_param in zip(q.parameters(), target_q.parameters()):
-                        # NB: We use an in-place operations "mul_", "add_" to update target
-                        # params, as opposed to "mul" and "add", which would make new tensors.
                         target_param.data.mul_(self.polyak)
                         target_param.data.add_((1 - self.polyak) * param.data)
 

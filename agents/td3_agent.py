@@ -18,8 +18,10 @@ class TD3Agent:
             hidden_size=200,
             policy_noise=0.2,
             exploration_noise=0.1,
-            policy_delay=2
+            policy_delay=2,
+            lr=1e-4
     ):
+        self.lr = lr
         self.policy_delay = policy_delay
         self.exploration_noise = exploration_noise
         self.policy_noise = policy_noise
@@ -42,16 +44,17 @@ class TD3Agent:
         self.target_q1.load_state_dict(self.target_q1.state_dict())
         self.target_q2.load_state_dict(self.target_q2.state_dict())
 
-        self.optimizer_actor = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
-        self.optimizer_q1 = torch.optim.Adam(self.q1.parameters(), lr=1e-4)
-        self.optimizer_q2 = torch.optim.Adam(self.q2.parameters(), lr=1e-4)
+        self.optimizer_actor = torch.optim.Adam(self.actor.parameters(), lr=self.lr)
+        self.optimizer_q1 = torch.optim.Adam(self.q1.parameters(), lr=self.lr)
+        self.optimizer_q2 = torch.optim.Adam(self.q2.parameters(), lr=self.lr)
 
         self.memory = Memory(self.memory_size)
 
+    @torch.no_grad()
     def get_action(self, state, deter):
         state = torch.from_numpy(state).to(torch.float32).unsqueeze(dim=0).to(self.device)
         action = self.actor(state)
-        action = action.squeeze(dim=0).cpu().detach().numpy()
+        action = action.squeeze(dim=0).cpu().numpy()
         if not deter:
             # add exploration noise
             action += np.random.normal(0, self.exploration_noise, size=action.shape)

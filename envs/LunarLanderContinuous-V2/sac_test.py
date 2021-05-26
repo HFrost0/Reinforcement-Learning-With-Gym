@@ -1,26 +1,23 @@
 from collections import deque
 import gym
-from agents import TD3Agent
-from common.utils import NormalizedActions, valid
+from agents import SACAgent
+from common.utils import valid, NormalizedActions
 
 env = NormalizedActions(gym.make('LunarLanderContinuous-v2'))
 episodes = 5000
-exploration_noise = 0.1
 n_obs = env.observation_space.shape[0]
 n_action = env.action_space.shape[0]
-agent = TD3Agent(
+agent = SACAgent(
     n_obs, n_action,
-    device='cpu',
-    memory_size=100000,
-    batch_size=128,
+    memory_size=1000000,
+    batch_size=256,
     hidden_size=200,
     lr=1e-3,
+    alpha=0.2,
     gamma=0.99,
-    soft_tau=1e-2,
-    policy_noise=0.1,
-    exploration_noise=0.05,
-    policy_delay=4,
+    polyak=0.995,
 )
+# using moving average todo: use independent valid
 ma_deque = deque(maxlen=100)
 for ep in range(episodes):
     state = env.reset()
@@ -39,8 +36,8 @@ for ep in range(episodes):
     print('Episode:{}/{}, Step:{} Reward:{} Average Reward:{}'
           .format(ep + 1, episodes, i_step, ep_reward, average_reward))
     if average_reward > 200:
-        agent.save('lunar_td3.pt')
+        agent.save('lunar_sac.pt')
         break
     agent.update(i_step)
-# valid
+# show results
 valid(agent, env, render=True)
