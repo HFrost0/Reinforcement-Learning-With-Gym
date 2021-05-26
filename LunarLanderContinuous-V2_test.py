@@ -1,5 +1,5 @@
 import gym
-from agents.sac_agent import SACAgent
+from agents import SACAgent
 from common.utils import valid, NormalizedActions
 
 

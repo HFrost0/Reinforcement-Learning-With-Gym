@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn.functional as F
 from common.memory import Memory
@@ -5,15 +6,29 @@ from common.models import ActorNet, CriticNet
 
 
 class TD3Agent:
-    def __init__(self, n_obs, n_action, device='cpu'):
+    def __init__(
+            self,
+            n_obs,
+            n_action,
+            device='cpu',
+            memory_size=100000,
+            batch_size=128,
+            gamma=0.99,
+            soft_tau=1e-2,
+            hidden_size=200,
+            policy_noise=0.2,
+            exploration_noise=0.1,
+            policy_delay=2
+    ):
+        self.policy_delay = policy_delay
+        self.exploration_noise = exploration_noise
+        self.policy_noise = policy_noise
+        self.hidden_size = hidden_size
+        self.soft_tau = soft_tau
+        self.gamma = gamma
+        self.batch_size = batch_size
+        self.memory_size = memory_size
         self.device = device
-        self.memory_size = 100000
-        self.batch_size = 128
-        self.gamma = 0.99
-        self.soft_tau = 1e-2
-        self.hidden_size = 30
-        self.policy_noise = 0.2
-        self.policy_delay = 2
 
         self.actor = ActorNet(n_obs, n_action, self.hidden_size).to(self.device)
         self.q1 = CriticNet(n_obs, n_action, self.hidden_size).to(self.device)
@@ -33,10 +48,15 @@ class TD3Agent:
 
         self.memory = Memory(self.memory_size)
 
-    def get_action(self, state):
+    def get_action(self, state, deter):
         state = torch.from_numpy(state).to(torch.float32).unsqueeze(dim=0).to(self.device)
-        out = self.actor(state)
-        return out.squeeze(dim=0).cpu().detach().numpy()
+        action = self.actor(state)
+        action = action.squeeze(dim=0).cpu().detach().numpy()
+        if not deter:
+            # add exploration noise
+            action += np.random.normal(0, self.exploration_noise, size=action.shape)
+            action = action.clip(-1., 1.)
+        return action
 
     def update(self, n_updates):
         if len(self.memory) < self.batch_size:
@@ -76,3 +96,22 @@ class TD3Agent:
                     target_param.data.copy_(target_param.data * (1. - self.soft_tau) + self.soft_tau * param.data)
                 for target_param, param in zip(self.target_q2.parameters(), self.q1.parameters()):
                     target_param.data.copy_(target_param.data * (1. - self.soft_tau) + self.soft_tau * param.data)
+
+    def save(self, file_path):
+        data = {
+            'actor': self.actor.state_dict(),
+            'q1': self.q1.state_dict(),
+            'q2': self.q2.state_dict(),
+        }
+        torch.save(data, file_path)
+        print('model saved')
+
+    def load(self, file_path):
+        data = torch.load(file_path)
+        self.actor.load_state_dict(data['actor'])
+        self.target_actor.load_state_dict(data['target_actor'])
+        self.q1.load_state_dict(data['q1'])
+        self.q2.load_state_dict(data['q2'])
+        self.target_q1.load_state_dict(data['q1'])
+        self.target_q2.load_state_dict(data['q2'])
+        print('model loaded')

@@ -6,16 +6,29 @@ from common.models import SquashedGaussianMLPActor, CriticNet
 
 
 class SACAgent:
-    def __init__(self, n_obs, n_action, device='cpu'):
+    def __init__(
+            self,
+            n_obs,
+            n_action,
+            device='cpu',
+            memory_size=100000,
+            batch_size=128,
+            alpha=0.2,
+            gamma=0.99,
+            soft_tau=1e-2,
+            hidden_size=200,
+            lr=5e-4,
+            polyak=0.995,
+    ):
         self.device = device
-        self.memory_size = 100000
-        self.batch_size = 128
-        self.alpha = 0.2
-        self.gamma = 0.99
-        self.soft_tau = 1e-2
-        self.hidden_size = 200
-        self.lr = 5e-4
-        self.polyak = 0.995
+        self.memory_size = memory_size
+        self.batch_size = batch_size
+        self.alpha = alpha
+        self.gamma = gamma
+        self.soft_tau = soft_tau
+        self.hidden_size = hidden_size
+        self.lr = lr
+        self.polyak = polyak
 
         self.actor = SquashedGaussianMLPActor(n_obs, n_action, self.hidden_size).to(self.device)
         self.q1 = CriticNet(n_obs, n_action, self.hidden_size).to(self.device)
