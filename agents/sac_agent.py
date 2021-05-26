@@ -1,20 +1,15 @@
 import torch
 import torch.nn.functional as F
-
+from agents import Agent
 from common.memory import Memory
 from common.models import SquashedGaussianMLPActor, CriticNet
 
 
-class SACAgent:
+class SACAgent(Agent):
     def __init__(
             self,
-            n_obs,
-            n_action,
-            device='cpu',
-            memory_size=100000,
-            batch_size=128,
-            hidden_size=200,
-            lr=5e-4,
+            n_obs, n_action, device='cpu',
+            memory_size=100000, batch_size=128, hidden_size=200, lr=5e-4,
             gamma=0.99,
             alpha=0.2,
             polyak=0.995,
@@ -53,12 +48,7 @@ class SACAgent:
         if len(self.memory) < self.batch_size:
             return
         for i in range(n_updates):
-            data = self.memory.sample(self.batch_size)
-            data = (torch.FloatTensor(i).to(self.device) for i in data)
-            state, action, reward, next_state, done = data
-            reward = reward.unsqueeze(1)
-            done = done.unsqueeze(1)
-
+            state, action, reward, next_state, done = self.memory.sample(self.batch_size, self.device)
             # update critic
             with torch.no_grad():
                 next_action, next_log_prob = self.actor(next_state, with_log_prob=True)

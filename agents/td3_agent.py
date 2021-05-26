@@ -1,25 +1,19 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
+from agents import Agent
 from common.memory import Memory
 from common.models import ActorNet, CriticNet
 
 
-class TD3Agent:
+class TD3Agent(Agent):
     def __init__(
-            self,
-            n_obs,
-            n_action,
-            device='cpu',
-            memory_size=100000,
-            batch_size=128,
-            gamma=0.99,
+            self, n_obs, n_action, device='cpu',
+            memory_size=100000, batch_size=128, gamma=0.99, hidden_size=200, lr=1e-4,
             soft_tau=1e-2,
-            hidden_size=200,
             policy_noise=0.2,
             exploration_noise=0.1,
             policy_delay=2,
-            lr=1e-4
     ):
         self.lr = lr
         self.policy_delay = policy_delay
@@ -65,11 +59,7 @@ class TD3Agent:
         if len(self.memory) < self.batch_size:
             return
         for i in range(n_updates):
-            data = self.memory.sample(self.batch_size)
-            data = (torch.FloatTensor(i).to(self.device) for i in data)
-            state, action, reward, next_state, done = data
-            reward = reward.unsqueeze(1)
-            done = done.unsqueeze(1)
+            state, action, reward, next_state, done = self.memory.sample(self.batch_size, self.device)
             # critic update
             target_action = self.target_actor(next_state)
             target_action += torch.normal(0, self.policy_noise, size=action.shape, device=self.device)
