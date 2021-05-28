@@ -1,7 +1,7 @@
 # Reinforcement-Learning-With-Gym
 ![license](https://img.shields.io/github/license/HFrost0/Reinforcement-Learning-With-Gym?style=for-the-badge)
 
-Simple and efficient [PyTorch](https://pytorch.org/) deep reinforcement algorithm implementation tested by [OpenAI Gym](https://gym.openai.com/). Easy for beginner 🥳.
+Simple [PyTorch](https://pytorch.org/) deep reinforcement algorithm implementation tested by [OpenAI Gym](https://gym.openai.com/). Easy for beginner 🥳.
 ## Step 1 : Setup up environment
 To install Gym, you can follow this [instruction](https://github.com/openai/gym#installing-everything).  
 Since some environments like `LunarLanderContinuous-V2` need fully installation，you may need to additionally do this:
